@@ -1,0 +1,39 @@
+steps:
+  # 1. Build the backend container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/nocfinity-repo/nocfinity-backend:$COMMIT_SHA'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/nocfinity-repo/nocfinity-backend:latest'
+      - '.'
+
+  # 2. Push image to Google Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/nocfinity-repo/nocfinity-backend'
+
+  # 3. Deploy container image to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'nocfinity-backend'
+      - '--image'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/nocfinity-repo/nocfinity-backend:$COMMIT_SHA'
+      - '--region'
+      - 'asia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/nocfinity-repo/nocfinity-backend:$COMMIT_SHA'
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/nocfinity-repo/nocfinity-backend:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
