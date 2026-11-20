@@ -380,9 +380,11 @@ class ProductController extends Controller
 
         if (!empty($images)) {
             foreach ($images as $idx => $img) {
+                $savedUrl = $this->saveImageFromUrlOrBase64($img['image_url'] ?? null);
+                if (empty($savedUrl)) continue;
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_url' => $img['image_url'],
+                    'image_url' => $savedUrl,
                     'is_primary' => $img['is_primary'] ?? ($idx === 0),
                     'sort_order' => $idx,
                 ]);
@@ -432,9 +434,11 @@ class ProductController extends Controller
             $product->images()->delete();
             foreach ($imagesData as $idx => $img) {
                 if (empty($img['image_url'])) continue;
+                $savedUrl = $this->saveImageFromUrlOrBase64($img['image_url']);
+                if (empty($savedUrl)) continue;
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_url' => $img['image_url'],
+                    'image_url' => $savedUrl,
                     'is_primary' => $img['is_primary'] ?? ($idx === 0),
                     'sort_order' => $idx,
                 ]);
@@ -467,6 +471,34 @@ class ProductController extends Controller
             'url' => $url,
             'file_name' => $fileName,
         ], 'Image uploaded successfully.', 201);
+    }
+
+    // Helper: Decode base64 image or keep standard URL
+    private function saveImageFromUrlOrBase64(?string $imageUrl): ?string
+    {
+        if (empty($imageUrl)) {
+            return null;
+        }
+
+        // Check if string is a base64 Data URI (e.g. data:image/jpeg;base64,...)
+        if (preg_match('/^data:image\/(\w+);base64,(.+)$/s', $imageUrl, $matches)) {
+            $ext = strtolower($matches[1]);
+            if ($ext === 'jpeg') {
+                $ext = 'jpg';
+            }
+            $data = base64_decode($matches[2]);
+            if ($data !== false) {
+                $fileName = 'prod_' . time() . '_' . Str::random(8) . '.' . $ext;
+                $destinationPath = public_path('uploads/products');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                file_put_contents($destinationPath . '/' . $fileName, $data);
+                return '/uploads/products/' . $fileName;
+            }
+        }
+
+        return $imageUrl;
     }
 
     // Admin: Delete product
