@@ -192,7 +192,11 @@ class OrderController extends Controller
     {
         $order = Order::with(['items.product.images', 'payment'])
             ->where(function ($q) use ($id) {
-                $q->where('id', $id)->orWhere('order_number', $id);
+                if (is_numeric($id)) {
+                    $q->where('id', (int) $id)->orWhere('order_number', $id);
+                } else {
+                    $q->where('order_number', $id);
+                }
             })->firstOrFail();
 
         $user = $request->user();

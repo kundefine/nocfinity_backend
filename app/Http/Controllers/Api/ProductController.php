@@ -34,7 +34,11 @@ class ProductController extends Controller
         if ($request->filled('category')) {
             $cat = $request->category;
             $query->whereHas('category', function ($q) use ($cat) {
-                $q->where('slug', $cat)->orWhere('id', $cat);
+                if (is_numeric($cat)) {
+                    $q->where('id', (int) $cat)->orWhere('slug', $cat);
+                } else {
+                    $q->where('slug', $cat);
+                }
             });
         }
 
@@ -159,7 +163,11 @@ class ProductController extends Controller
         $product = Product::active()
             ->with(['category', 'images', 'reviews.user'])
             ->where(function ($q) use ($idOrSlug) {
-                $q->where('slug', $idOrSlug)->orWhere('id', $idOrSlug);
+                if (is_numeric($idOrSlug)) {
+                    $q->where('id', (int) $idOrSlug)->orWhere('slug', $idOrSlug);
+                } else {
+                    $q->where('slug', $idOrSlug);
+                }
             })
             ->firstOrFail();
 
