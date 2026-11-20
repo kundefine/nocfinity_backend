@@ -239,11 +239,11 @@ class OrderController extends Controller
         }
 
         if ($request->filled('search')) {
-            $s = $request->search;
+            $s = '%' . mb_strtolower(trim($request->search)) . '%';
             $query->where(function ($q) use ($s) {
-                $q->where('order_number', 'like', "%{$s}%")
-                  ->orWhere('shipping_name', 'like', "%{$s}%")
-                  ->orWhere('shipping_email', 'like', "%{$s}%");
+                $q->whereRaw('LOWER(order_number) LIKE ?', [$s])
+                  ->orWhereRaw('LOWER(shipping_name) LIKE ?', [$s])
+                  ->orWhereRaw('LOWER(shipping_email) LIKE ?', [$s]);
             });
         }
 

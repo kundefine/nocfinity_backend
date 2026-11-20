@@ -20,13 +20,14 @@ class ProductController extends Controller
     {
         $query = Product::active()->with(['category', 'images']);
 
-        // Search query
+        // Search query (case-insensitive across PostgreSQL & MySQL)
         if ($request->filled('q') || $request->filled('search')) {
             $search = $request->get('q', $request->get('search'));
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+            $lower = '%' . mb_strtolower(trim($search)) . '%';
+            $query->where(function ($q) use ($lower) {
+                $q->whereRaw('LOWER(name) LIKE ?', [$lower])
+                  ->orWhereRaw('LOWER(description) LIKE ?', [$lower])
+                  ->orWhereRaw('LOWER(sku) LIKE ?', [$lower]);
             });
         }
 
@@ -219,8 +220,11 @@ class ProductController extends Controller
         $query = Product::with(['category', 'images']);
 
         if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%");
+            $s = '%' . mb_strtolower(trim($request->search)) . '%';
+            $query->where(function ($q) use ($s) {
+                $q->whereRaw('LOWER(name) LIKE ?', [$s])
+                  ->orWhereRaw('LOWER(sku) LIKE ?', [$s]);
+            });
         }
 
         if ($request->filled('category_id')) {
