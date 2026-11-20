@@ -1,0 +1,50 @@
+databases:
+  - name: nocfinity-db
+    plan: free
+    databaseName: backend
+    user: nocfinity_user
+
+services:
+  - type: web
+    name: nocfinity-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/v1/categories
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        value: base64:oUj3bW3zVjWf4j6K2wE4w3y7q3V2K1t0a9Z8x7c6v5U=
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: nocfinity-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: nocfinity-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: nocfinity-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: nocfinity-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: nocfinity-db
+          property: password
+      - key: RUN_MIGRATIONS
+        value: "true"
+      - key: RUN_SEEDERS
+        value: "true"
+      - key: STRIPE_KEY
+        value: pk_test_51UdYHeRG93tkHUqIgRvk0QwVJff4ONjeLB65HxOIbWxKUIBs7qZoCxXUBVGHYHlUNUPLBNZSdrWVPdxyMTLtwmUd00gB6BQR4q
+      - key: STRIPE_SECRET
+        sync: false

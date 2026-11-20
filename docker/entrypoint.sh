@@ -24,6 +24,10 @@ fi
 if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "Running database migrations..."
     php artisan migrate --force || echo "Migration failed or database not reachable yet"
+    if [ "$RUN_SEEDERS" = "true" ]; then
+        echo "Running database seeders..."
+        php artisan db:seed --force || echo "Seeding skipped or failed"
+    fi
 fi
 
 # Cache configuration and routes for production performance if APP_KEY is set
