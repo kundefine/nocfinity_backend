@@ -57,6 +57,46 @@ class ProductController extends Controller
             $query->where('price', '<=', (float) $request->max_price);
         }
 
+        // Color variant filter (supports PostgreSQL and MySQL)
+        if ($request->filled('color')) {
+            $color = mb_strtolower(trim($request->color));
+            $likePattern = '%' . $color . '%';
+            $query->where(function ($q) use ($likePattern, $color) {
+                $rawCol = config('database.default') === 'pgsql' ? 'LOWER(colors::text)' : 'LOWER(CAST(colors AS CHAR))';
+                $q->whereRaw("$rawCol LIKE ?", [$likePattern]);
+                if ($color === 'blue') {
+                    $q->orWhereRaw("$rawCol LIKE ?", ['%navy%'])
+                      ->orWhereRaw("$rawCol LIKE ?", ['%denim%']);
+                } elseif ($color === 'green') {
+                    $q->orWhereRaw("$rawCol LIKE ?", ['%olive%']);
+                } elseif ($color === 'black') {
+                    $q->orWhereRaw("$rawCol LIKE ?", ['%charcoal%']);
+                } elseif ($color === 'red') {
+                    $q->orWhereRaw("$rawCol LIKE ?", ['%maroon%']);
+                }
+            });
+        }
+
+        // Size variant filter (supports PostgreSQL and MySQL)
+        if ($request->filled('size')) {
+            $size = mb_strtolower(trim($request->size));
+            $likePattern = '%' . $size . '%';
+            $query->where(function ($q) use ($likePattern, $size) {
+                $rawCol = config('database.default') === 'pgsql' ? 'LOWER(sizes::text)' : 'LOWER(CAST(sizes AS CHAR))';
+                $q->whereRaw("$rawCol LIKE ?", [$likePattern]);
+                $sizeMap = [
+                    's' => 'small',
+                    'm' => 'medium',
+                    'l' => 'large',
+                    'xl' => 'x-large',
+                    'xxl' => '2x-large',
+                ];
+                if (isset($sizeMap[$size])) {
+                    $q->orWhereRaw("$rawCol LIKE ?", ['%' . $sizeMap[$size] . '%']);
+                }
+            });
+        }
+
         // Sorting
         $sort = $request->get('sort', 'newest');
         switch ($sort) {
