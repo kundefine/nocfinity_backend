@@ -465,10 +465,12 @@ class ProductController extends Controller
 
         $file->move($destinationPath, $fileName);
 
-        $url = '/uploads/products/' . $fileName;
+        $relativePath = '/uploads/products/' . $fileName;
+        $fullUrl = $request->getSchemeAndHttpHost() . $relativePath;
 
         return $this->success([
-            'url' => $url,
+            'url' => $fullUrl,
+            'relative_url' => $relativePath,
             'file_name' => $fileName,
         ], 'Image uploaded successfully.', 201);
     }
