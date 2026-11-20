@@ -31,6 +31,8 @@ class Product extends Model
         'effective_price',
         'average_rating',
         'reviews_count',
+        'in_stock',
+        'stock_status',
     ];
 
     protected function casts(): array
@@ -77,6 +79,23 @@ class Product extends Model
     public function getReviewsCountAttribute(): int
     {
         return $this->reviews()->count();
+    }
+
+    public function getInStockAttribute(): bool
+    {
+        return (int) $this->stock > 0;
+    }
+
+    public function getStockStatusAttribute(): string
+    {
+        $stock = (int) $this->stock;
+        if ($stock <= 0) {
+            return 'out_of_stock';
+        }
+        if ($stock <= 5) {
+            return 'low_stock';
+        }
+        return 'in_stock';
     }
 
     public function scopeActive($query)

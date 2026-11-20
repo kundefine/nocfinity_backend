@@ -97,6 +97,20 @@ class ProductController extends Controller
             });
         }
 
+        // Stock and availability filters
+        if ($request->boolean('in_stock')) {
+            $query->where('stock', '>', 0);
+        } elseif ($request->filled('stock_status')) {
+            $status = $request->stock_status;
+            if ($status === 'in_stock') {
+                $query->where('stock', '>', 0);
+            } elseif ($status === 'low_stock' || $status === 'low') {
+                $query->where('stock', '>', 0)->where('stock', '<=', 5);
+            } elseif ($status === 'out_of_stock' || $status === 'out') {
+                $query->where('stock', '<=', 0);
+            }
+        }
+
         // Sorting
         $sort = $request->get('sort', 'newest');
         switch ($sort) {
