@@ -444,6 +444,31 @@ class ProductController extends Controller
         return $this->success($product->load(['category', 'images']), 'Product updated successfully.');
     }
 
+    // Admin: Upload product image
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'image' => ['required', 'file', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:5120'],
+        ]);
+
+        $file = $request->file('image');
+        $fileName = 'prod_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+
+        $destinationPath = public_path('uploads/products');
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+
+        $file->move($destinationPath, $fileName);
+
+        $url = '/uploads/products/' . $fileName;
+
+        return $this->success([
+            'url' => $url,
+            'file_name' => $fileName,
+        ], 'Image uploaded successfully.', 201);
+    }
+
     // Admin: Delete product
     public function destroy($id)
     {

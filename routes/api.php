@@ -102,6 +102,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:products.view');
         Route::post('/products', [ProductController::class, 'store'])
             ->middleware('permission:products.create');
+        Route::post('/products/upload', [ProductController::class, 'uploadImage'])
+            ->middleware('permission:products.create');
         Route::put('/products/{id}', [ProductController::class, 'update'])
             ->middleware('permission:products.edit');
         Route::delete('/products/{id}', [ProductController::class, 'destroy'])
