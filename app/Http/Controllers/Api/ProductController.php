@@ -212,6 +212,52 @@ class ProductController extends Controller
         ]);
     }
 
+    // Storefront: Return available filter options (colors, sizes, dress styles, price range)
+    public function filters()
+    {
+        $categories = Category::select('id', 'name', 'slug')->get();
+
+        $minPrice = (float) (Product::active()->min('price') ?? 0);
+        $maxPrice = (float) (Product::active()->max('price') ?? 300);
+
+        $allProducts = Product::active()->select('colors', 'sizes', 'dress_style')->get();
+
+        $colors = [];
+        $colorNames = [];
+        $sizes = [];
+
+        foreach ($allProducts as $p) {
+            if (is_array($p->colors)) {
+                foreach ($p->colors as $c) {
+                    $name = is_array($c) ? ($c['name'] ?? null) : (is_string($c) ? $c : null);
+                    $hex = is_array($c) ? ($c['hex'] ?? '#000000') : '#000000';
+                    if ($name && !in_array(strtolower($name), $colorNames)) {
+                        $colorNames[] = strtolower($name);
+                        $colors[] = ['name' => $name, 'hex' => $hex];
+                    }
+                }
+            }
+            if (is_array($p->sizes)) {
+                foreach ($p->sizes as $s) {
+                    if (is_string($s) && !in_array($s, $sizes)) {
+                        $sizes[] = $s;
+                    }
+                }
+            }
+        }
+
+        return $this->success([
+            'categories' => $categories,
+            'colors' => $colors,
+            'sizes' => $sizes,
+            'dress_styles' => ['casual', 'formal', 'party', 'gym'],
+            'price' => [
+                'min' => $minPrice,
+                'max' => $maxPrice,
+            ],
+        ]);
+    }
+
     // Storefront: Single product details with related products
     public function show($idOrSlug)
     {

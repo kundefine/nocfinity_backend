@@ -34,6 +34,7 @@ Route::prefix('v1')->group(function () {
     // Products
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/featured', [ProductController::class, 'featured']);
+    Route::get('/products/filters', [ProductController::class, 'filters']);
     Route::get('/products/{idOrSlug}', [ProductController::class, 'show']);
 
     // Cart (works for both guests via X-Guest-Token header and logged-in users)
